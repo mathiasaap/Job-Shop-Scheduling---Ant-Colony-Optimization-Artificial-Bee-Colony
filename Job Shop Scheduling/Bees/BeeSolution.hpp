@@ -7,23 +7,23 @@
 
 class BeeSolution
 {
-    std::vector<std::pair<int, int>> solution;
+    std::vector<int> solution;
     std::vector<graphNode> nodes;
     int cost;
     std::shared_ptr<JSSP> problem;
 
-    std::vector<std::pair<int, int>> swapMutation(std::vector<std::pair<int, int>> solution);
-    std::vector<std::pair<int, int>> insertMutation(std::vector<std::pair<int, int>> solution);
+    std::vector<int> swapMutation(std::vector<int> solution);
+    std::vector<int> insertMutation(std::vector<int> solution);
     void schedule();
     int TTL;
     
 public:
-    BeeSolution(std::vector<std::pair<int, int>> solution,std::shared_ptr<JSSP> problem);
-    std::vector<std::pair<int, int>> swapMutation();
-    std::vector<std::pair<int, int>> insertMutation();
-    std::vector<std::pair<int, int>> doubleSwapMutation();
-    std::vector<std::pair<int, int>> doubleInsertMutation();
-    std::vector<std::pair<int, int>> insertManyMutation(int n);
+    BeeSolution(std::vector<int> solution,std::shared_ptr<JSSP> problem);
+    std::vector<int> swapMutation();
+    std::vector<int> insertMutation();
+    std::vector<int> doubleSwapMutation();
+    std::vector<int> doubleInsertMutation();
+    std::vector<int> insertManyMutation(int n);
     diagram getGraph();
 
     int getCost();

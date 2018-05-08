@@ -4,7 +4,7 @@
 #include "diagram.hpp"
 
 
-ABC::ABC(std::shared_ptr<JSSP> problem) : problem(problem), populationSize(10)
+ABC::ABC(std::shared_ptr<JSSP> problem) : problem(problem), populationSize(100)
 {
     initializePopulation();
 }
@@ -36,7 +36,7 @@ void ABC::run(int iterations)
 void ABC::initializePopulation()
 {
     for (int i = 0; i < populationSize; i++)
-    {
+    {/*
         std::vector<std::pair<int, int>> open;
         std::vector<std::pair<int, int>> tabu;
         for(int job = 0; job < problem->jobs.size(); job++)
@@ -57,6 +57,34 @@ void ABC::initializePopulation()
             
         }
         population.push_back(std::make_shared<BeeSolution>(tabu, problem));
+      */
+        
+        //std::vector<int> open;
+        std::vector<int> tabu;
+        for(int job = 0; job < problem->jobs.size(); job++)
+        {
+            for(int machine = 0; machine < problem->n_machines; machine++)
+            {
+                tabu.push_back(job);
+            }
+            
+        }
+        /*
+        while(!open.empty())
+        {
+            int popIndex = rand()%open.size();
+            std::pair<int, int> popped = open[popIndex];
+            tabu.push_back(popped);
+            open.erase(open.begin() + popIndex);
+            if(popped.second < problem->n_machines-1)
+            {
+                open.push_back(std::make_pair(popped.first, popped.second+1));
+            }
+            
+        }*/
+        std::random_shuffle(tabu.begin(), tabu.end());
+        population.push_back(std::make_shared<BeeSolution>(tabu, problem));
+        
         std::cout<<"Added initial solution to pupulation"<<std::endl;
         
     }

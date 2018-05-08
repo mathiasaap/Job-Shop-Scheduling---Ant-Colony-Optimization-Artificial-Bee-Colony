@@ -10,7 +10,7 @@ class ACO
     int n_ants, n_generations;
     float alpha, beta, p;
     float maxPheromone, minPheromone;
-    std::unique_ptr<JSSP> problem;
+    std::shared_ptr<JSSP> problem;
     
     std::vector<std::vector<double>> tau;
     std::vector<std::vector<double>> deltaTau;
@@ -24,7 +24,7 @@ class ACO
     std::vector<std::shared_ptr<Ant>> bestAntsHallOfFame;
     
 public:
-    ACO(std::unique_ptr<JSSP> problem);
+    ACO(std::shared_ptr<JSSP> problem);
     void run();
 };
 #endif /* ACO_hpp */

@@ -5,9 +5,9 @@
 #include "graphNode.hpp"
 #include "AntScheduler.hpp"
 
-ACO::ACO(std::unique_ptr<JSSP> problem):n_generations(1000), alpha(0.2), beta(0.8), p(0.7), maxPheromone(0.5), minPheromone(0.01), problem(std::move(problem)), tau(this->problem->n_jobs*this->problem->n_machines), deltaTau(this->problem->n_jobs*this->problem->n_machines), bestAntEver(std::make_shared<Ant>())
+ACO::ACO(std::shared_ptr<JSSP> problem):n_generations(30), alpha(0.9), beta(0.1), p(0.7), maxPheromone(10), minPheromone(0.1), problem(std::move(problem)), tau(this->problem->n_jobs*this->problem->n_machines), deltaTau(this->problem->n_jobs*this->problem->n_machines), bestAntEver(std::make_shared<Ant>(problem))
 {
-    n_ants = 2*this->problem->n_jobs;
+    n_ants = 30*this->problem->n_jobs;
     
     for(auto t = tau.begin(); t != tau.end(); t++)
     {
@@ -66,7 +66,7 @@ int ACO::scheduleRoute(std::shared_ptr<Ant> ant)
 diagram ACO::getBestDiagram()
 {
     
-    diagram graphics(1600, 800, problem->n_machines);
+    diagram graphics(1600, 900, problem->n_machines, problem->n_jobs);
     
     std::vector<int> machineBusyUntil(problem->n_machines);
     std::vector<int> jobBusyUntil(problem->n_jobs);
@@ -99,7 +99,7 @@ void ACO::addPheromone(std::vector<std::shared_ptr<Ant>>& ants)
 {
     double Q = 100;
     //std::shared_ptr<Ant> bestAnt = bestAntEver;
-    std::shared_ptr<Ant> bestAnt = std::make_shared<Ant>();
+    std::shared_ptr<Ant> bestAnt = std::make_shared<Ant>(problem);
     for(auto ant = ants.begin(); ant != ants.end(); ant++)
     {
         if((*ant)->routeLength < bestAnt->routeLength)
@@ -108,12 +108,12 @@ void ACO::addPheromone(std::vector<std::shared_ptr<Ant>>& ants)
         }
         
     }
-    
     std::pair<int, int> prev = bestAnt->tabu[0];
     for(int i = 1; i < bestAnt->tabu.size(); i++)
     {
         std::pair<int, int> current = bestAnt->tabu[i];
         deltaTau[prev.second + prev.first* this->problem->n_machines][current.second + current.first* this->problem->n_machines] = Q/bestAnt->routeLength;
+        prev = current;
     }
     for (int i = 0; i < tau.size(); i++)
     {
@@ -138,6 +138,7 @@ void ACO::addPheromone(std::vector<std::shared_ptr<Ant>>& ants)
     {
         bestAntEver = bestAnt;
     }
+    std::cout <<bestAntEver->routeLength << "   " <<bestAnt->routeLength<<std::endl;
     bestAntsHallOfFame.push_back(bestAnt);
     
 }
@@ -153,7 +154,7 @@ void ACO::run()
         std::vector<std::shared_ptr<Ant>> ants;
         for(int antNo = 0 ; antNo < n_ants; antNo++)
         {
-            ants.push_back(std::make_shared<Ant>());
+            ants.push_back(std::make_shared<Ant>(problem));
         }
         
         for(auto ant = ants.begin(); ant != ants.end(); ant++)
@@ -178,7 +179,7 @@ void ACO::run()
         for(int k = 0; k < n_ants; ++k)
         {
             //std::cout<<"Ant "<<k<<std::endl;
-            //AntScheduler sched(problem->n_machines, problem->n_jobs);
+            AntScheduler sched(problem->n_machines, problem->n_jobs);
             while(ants[k]->open.size() > 0)
             {
                 
@@ -191,7 +192,9 @@ void ACO::run()
                     double tauValue = tau[fromNode.second + fromNode.first * this->problem->n_machines][node->second + node->first * this->problem->n_machines];
                 
                     std::pair<int, int> job = problem->jobs[node->first][node->second]; //machine, cost
+                    
                     double dist = job.second;
+                    
                     //float dist = 0;
                     //std::cout<<"tabunode"<<std::endl;
                     
@@ -209,7 +212,7 @@ void ACO::run()
                     
                     
                     std::pair<int, int> prevJob = problem->jobs[fromNode.first][fromNode.second]; //machine, cost
-                    //float dist2 = sched.scheduleJob(fromNode.first, prevJob.first, prevJob.second);
+                    float dist2 = sched.scheduleJob(fromNode.first, prevJob.first, prevJob.second);
                     //float dist2 = fromNode.
                     
                     edgeFitness.push_back(pow(tauValue, alpha)*pow(1.0/dist, beta));
@@ -278,6 +281,10 @@ void ACO::run()
             // Sequence in tabu list now
             //std::cout<<"Ant "<< k << " taboo list size "<<ants[k].tabu.size()<<std::endl;
             //std::cout<<"Ant "<< k << " time "<<scheduleRoute(ants[k])<<std::endl;
+            if(gen == n_generations-1)
+            {
+                ants[k]->localSearch(10000);
+            }
             
             scheduleRoute(ants[k]);
         }

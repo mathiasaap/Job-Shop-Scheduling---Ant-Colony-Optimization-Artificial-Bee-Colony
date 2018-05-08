@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <iostream>
 
-BeeSolution::BeeSolution(std::vector<std::pair<int, int> > solution, std::shared_ptr<JSSP> problem): solution(solution), problem(problem), TTL(10)
+BeeSolution::BeeSolution(std::vector<int> solution, std::shared_ptr<JSSP> problem): solution(solution), problem(problem), TTL(10)
 {
     schedule();
 }
@@ -12,11 +12,12 @@ void BeeSolution::schedule()
     std::vector<int> machineBusyUntil(problem->n_machines);
     std::vector<int> jobBusyUntil(problem->n_jobs);
     int maxBusyUntil = 0;
+    std::vector<int> currentMachineIdxForJob(problem->n_jobs);
     
     for(auto jobIdx = solution.begin(); jobIdx != solution.end(); jobIdx++)
     {
-        std::pair<int, int >  jobInfo = problem->jobs[jobIdx->first][jobIdx->second];
-        int jobNo = jobIdx->first;
+        std::pair<int, int >  jobInfo = problem->jobs[*jobIdx][currentMachineIdxForJob[*jobIdx]++];
+        int jobNo = *jobIdx;
         int machineNo = jobInfo.first;
         int jobTime = jobInfo.second;
         
@@ -35,29 +36,30 @@ void BeeSolution::schedule()
     this->cost = maxBusyUntil;
 }
 
-std::vector<std::pair<int, int>> BeeSolution::insertMutation()
+std::vector<int> BeeSolution::insertMutation()
 {
     return insertMutation(this->solution);
 }
 
 
-std::vector<std::pair<int, int>> BeeSolution::swapMutation()
+std::vector<int> BeeSolution::swapMutation()
 {
     return swapMutation(this->solution);
 }
 
-std::vector<std::pair<int, int>> BeeSolution::insertMutation(std::vector<std::pair<int, int> > solution)
+std::vector<int> BeeSolution::insertMutation(std::vector<int> solution)
 {
-    std::vector<std::pair<int, int>> mutatedSolution = solution;
+    std::vector<int> mutatedSolution = solution;
     int swapIndex = rand() % (solution.size() - 1) + 1;
-    while(mutatedSolution[swapIndex-1].first == mutatedSolution[swapIndex].first)
+    /*
+    while(mutatedSolution[swapIndex-1] == mutatedSolution[swapIndex])
     {
         swapIndex = (swapIndex+1)%mutatedSolution.size();
         if(swapIndex == 0)
         {
             swapIndex = 1;
         }
-    }
+    }*/
     
     std::iter_swap(mutatedSolution.begin() + swapIndex-1, mutatedSolution.begin() + swapIndex);
     
@@ -65,10 +67,17 @@ std::vector<std::pair<int, int>> BeeSolution::insertMutation(std::vector<std::pa
 }
 
 
-std::vector<std::pair<int, int>> BeeSolution::swapMutation(std::vector<std::pair<int, int> > solution)
+std::vector<int> BeeSolution::swapMutation(std::vector<int>solution)
 {
-    std::vector<std::pair<int, int>> mutatedSolution = solution;
+    std::vector<int> mutatedSolution = solution;
     int swapIndexStart = rand() % solution.size();
+    int swapIndexEnd = rand() % (solution.size()-1);
+    if (swapIndexEnd>= swapIndexStart)
+    {
+        swapIndexEnd++;
+    }
+    
+    /*
     int swapIndexLower = swapIndexStart;
     int swapIndexUpper = swapIndexStart;
     
@@ -105,9 +114,9 @@ std::vector<std::pair<int, int>> BeeSolution::swapMutation(std::vector<std::pair
     if(swapToIndex >= swapIndexStart)
     {
         swapToIndex++;
-    }
+    }*/
     
-    std::iter_swap(mutatedSolution.begin() + swapIndexStart, mutatedSolution.begin() + swapToIndex);
+    std::iter_swap(mutatedSolution.begin() + swapIndexStart, mutatedSolution.begin() + swapIndexEnd);
     
     
     return mutatedSolution;
@@ -119,13 +128,13 @@ int BeeSolution::getCost()
     return cost;
 }
 
-std::vector<std::pair<int, int> > BeeSolution::doubleInsertMutation()
+std::vector<int> BeeSolution::doubleInsertMutation()
 {
     return insertMutation(insertMutation(solution));
 }
 
 
-std::vector<std::pair<int, int> > BeeSolution::doubleSwapMutation()
+std::vector<int> BeeSolution::doubleSwapMutation()
 {
     return swapMutation(swapMutation(solution));
 }
@@ -135,11 +144,11 @@ int BeeSolution::TTLTick()
     return --TTL;
 }
 
-std::vector<std::pair<int, int> > BeeSolution::insertManyMutation(int n)
+std::vector<int> BeeSolution::insertManyMutation(int n)
 {
     if(n==0)
     {
-        return std::vector<std::pair<int, int>> (solution);
+        return std::vector<int> (solution);
     }
     auto pistar = insertMutation();
     for (int i =1; i<n; i++)
@@ -151,7 +160,7 @@ std::vector<std::pair<int, int> > BeeSolution::insertManyMutation(int n)
 
 diagram BeeSolution::getGraph()
 {
-     diagram graphics(1600, 800, problem->n_machines);
+     diagram graphics(1600, 800, problem->n_machines, problem->n_jobs);
     for(auto node = nodes.begin(); node != nodes.end(); node++)
     {
         graphics.addNode(*node);

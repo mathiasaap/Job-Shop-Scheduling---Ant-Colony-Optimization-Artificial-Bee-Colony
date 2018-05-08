@@ -9,14 +9,16 @@
 
 class diagram
 {
-    int width, height, makespan, n_machines;
+    int width, height, makespan, n_machines, n_jobs;
     std::vector<graphNode> nodes;
     
     SDL_Window* window;
     SDL_Renderer* renderer;
     std::vector<std::tuple<int, int, int>> colors;
+    void addText(int x, int y, int width, int height, float score, TTF_Font* font);
+    void addText(int x, int y, int width, int height, std::string text, TTF_Font* font);
 public:
-    diagram(int width, int height, int n_machines);
+    diagram(int width, int height, int n_machines, int n_jobs);
     
     void addNode(graphNode node);
     void drawDiagram();
